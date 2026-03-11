@@ -1,4 +1,4 @@
-<!-- Solar Pro v3.25 — 2026-03-11 — Fix buildBIDObject(): full equipment fields, kw_dc in watts, correct batt_qty, monthly_loan -->
+<!-- Solar Pro v3.26 — 2026-03-11 — buildBIDObject(): add addons array, has_panel_upgrade, has_car_charger flags -->
 <style>
 
 :root{--bg:#ebeef5;--bg2:#e0e4ef;--white:#ffffff;--card:#ffffff;--navy:#1a1a2e;--navy2:#1e2a4a;--gold:#FED44D;--goldd:#e6bf3a;--goldbg:rgba(254,212,77,.12);--gn:#22C55E;--gnbg:rgba(34,197,94,.08);--rd:#dc2626;--rdbg:rgba(220,38,38,.08);--bl:#2BABE2;--blbg:rgba(43,171,226,.08);--pu:#7c3aed;--pubg:rgba(124,58,237,.07);--bd:#cdd2e0;--bd2:#b8bdd0;--tx:#0a0a1a;--tx2:#1a1e35;--tx3:#3a4060;--r:12px;--rs:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05)}
@@ -4028,6 +4028,35 @@ function buildBIDObject(){
   var kwDC_watts=Math.round(kwDC*1000);
   var kwAC_watts=Math.round(kwAC*1000);
 
+  // Panel upgrade flag — true if user selected 200A panel upgrade addon
+  var hasPanelUpgrade=false;
+  for(var i=0;i<activeAddons.length;i++){if(activeAddons[i]==='panel_upgrade'||activeAddons[i]==='200a_upgrade'){hasPanelUpgrade=true;break;}}
+
+  // Car charger flag
+  var hasCarCharger=false;var carChargerFeet=0;
+  var ccCb=document.getElementById('cb-cc-addon');
+  if(ccCb&&ccCb.checked){hasCarCharger=true;var ccFtEl=document.getElementById('cs-cc-feet');carChargerFeet=ccFtEl?parseFloat(ccFtEl.value)||0:0;}
+
+  // Capture all active addons as array for manifest
+  var addonsOut=[];
+  if(hasCarCharger){addonsOut.push({key:'car_charger',label:'EV Car Charger',sub:carChargerFeet>0?carChargerFeet+'ft run':'',qty:1});}
+  if(hasPanelUpgrade){addonsOut.push({key:'panel_upgrade',label:'200A Main Panel Upgrade',sub:'Included in price',qty:1});}
+  // Other ADDON_CATALOG items
+  if(typeof activeAddons!=='undefined'&&typeof ADDON_CATALOG!=='undefined'){
+    for(var i=0;i<activeAddons.length;i++){
+      var ak=activeAddons[i];
+      if(ak==='panel_upgrade'||ak==='200a_upgrade')continue; // already handled
+      for(var j=0;j<ADDON_CATALOG.length;j++){
+        if(ADDON_CATALOG[j].key===ak){
+          var sel=document.getElementById('cs-'+ak);var selTxt=sel&&sel.options&&sel.selectedIndex>=0?sel.options[sel.selectedIndex].text:'';
+          var qtyEl=document.getElementById('cq-'+ak);var qty=qtyEl?parseFloat(qtyEl.value)||1:1;
+          addonsOut.push({key:ak,label:ADDON_CATALOG[j].label,sub:selTxt,qty:qty});
+          break;
+        }
+      }
+    }
+  }
+
   return {
     customer: {name:custName, address:custAddr, rep:repName, date:custDate, expiry:expISO},
     aurora_project_id: auroraId,
@@ -4040,7 +4069,9 @@ function buildBIDObject(){
       inv_model:invModel, inv_part:invPart,
       rack_model:rackModel, rack_part:rackPart,
       batt_model:battModel, batt_part:battPart,
-      batt_qty:battQty, batt_kwh:battKwh
+      batt_qty:battQty, batt_kwh:battKwh,
+      has_panel_upgrade:hasPanelUpgrade,
+      has_car_charger:hasCarCharger, car_charger_feet:carChargerFeet
     },
     pricing: {
       total:Math.round(salePrice), credit:credit, net:Math.round(netPrice),
@@ -4049,6 +4080,7 @@ function buildBIDObject(){
     },
     bill: {avg:billAvg, kwh:Math.round(billKwh), rate:billRate},
     monthly_kwh: monthlyKwh,
+    addons: addonsOut,
     esc: 6
   };
 }
