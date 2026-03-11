@@ -1,4 +1,4 @@
-<!-- Solar Pro v3.23 — 2026-03-11 — Generate Proposal: BID object modal + generateProposalBID() -->
+<!-- Solar Pro v3.25 — 2026-03-11 — Fix buildBIDObject(): full equipment fields, kw_dc in watts, correct batt_qty, monthly_loan -->
 <style>
 
 :root{--bg:#ebeef5;--bg2:#e0e4ef;--white:#ffffff;--card:#ffffff;--navy:#1a1a2e;--navy2:#1e2a4a;--gold:#FED44D;--goldd:#e6bf3a;--goldbg:rgba(254,212,77,.12);--gn:#22C55E;--gnbg:rgba(34,197,94,.08);--rd:#dc2626;--rdbg:rgba(220,38,38,.08);--bl:#2BABE2;--blbg:rgba(43,171,226,.08);--pu:#7c3aed;--pubg:rgba(124,58,237,.07);--bd:#cdd2e0;--bd2:#b8bdd0;--tx:#0a0a1a;--tx2:#1a1e35;--tx3:#3a4060;--r:12px;--rs:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05)}
@@ -3029,7 +3029,7 @@ function createAuroraProject(){
   .then(function(data){
     if(data.aurora_id){
       if(_id('ca-aurora-id'))_id('ca-aurora-id').value=data.aurora_id;
-      if(st){st.style.background='#dcfce7';st.style.color='#166534';st.textContent='✓ Created in Aurora! ID: '+data.aurora_id;}
+      if(st){st.style.background='#dcfce7';st.style.color='#166534';st.textContent=(data.found?'✓ Found in Aurora! ID: ':'✓ Created in Aurora! ID: ')+data.aurora_id;}
       if(btn){btn.disabled=false;btn.textContent='✓ In Aurora — Update';}
       // Show fetch layout button now that we have an Aurora ID
       var btnLayout=_id('btn-aurora-layout');if(btnLayout)btnLayout.style.display='block';
@@ -3853,7 +3853,7 @@ function genSiteSurveyPDF(){
 function ensureProposalModal(){
   if(_id('proposalMo'))return;
   var div=document.createElement('div');
-  div.innerHTML='<div class="mo" id="proposalMo"><div class="modal" style="width:520px;max-width:95vw"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:20px;font-weight:800;color:var(--navy)">&#x1F4E4; Generate Proposal</div><span onclick="closeProposalModal()" style="cursor:pointer;font-size:20px;color:var(--tx3)">&#x2715;</span></div><div id="prop-preview" style="background:var(--bg);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.7;color:var(--tx)"></div><div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:8px">Proposal Valid For</div><div style="display:flex;gap:8px"><button class="prop-exp-btn" data-days="20" onclick="setPropExpiry(20)" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:var(--rs);background:#fff;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer">20 Days</button><button class="prop-exp-btn" data-days="25" onclick="setPropExpiry(25)" style="flex:1;padding:8px;border:1.5px solid var(--bl);border-radius:var(--rs);background:rgba(43,171,226,.08);color:var(--bl);font-weight:700;font-size:12px;cursor:pointer">25 Days &#x2713;</button><button class="prop-exp-btn" data-days="30" onclick="setPropExpiry(30)" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:var(--rs);background:#fff;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer">30 Days</button></div><div id="prop-expiry-display" style="font-size:11px;color:var(--tx3);margin-top:6px;text-align:center"></div></div><div id="prop-bill-warn" style="display:none;background:#FEF3C7;border:1px solid #F59E0B;border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">&#x26A0;&#xFE0F; <b>No utility bill data.</b> Upload a bill or CSV in the &#x26A1; Utility Data section for accurate savings numbers. You can still generate &mdash; the proposal will use placeholder values.</div><div id="prop-output-wrap" style="display:none"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">BID Object &mdash; Copy into proposal HTML</div><textarea id="prop-output" readonly style="width:100%;height:180px;font-family:monospace;font-size:10px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--rs);padding:10px;resize:none;line-height:1.5;box-sizing:border-box"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button onclick="copyBIDOutput()" style="flex:1;padding:9px;border:none;border-radius:var(--rs);background:var(--gn);color:#fff;font-weight:700;font-size:12px;cursor:pointer">&#x1F4CB; Copy BID Block</button><button onclick="downloadBIDOutput()" style="flex:1;padding:9px;border:1px solid var(--bd);border-radius:var(--rs);background:#fff;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer">&#x2B07; Download .js</button></div><div id="prop-copy-confirm" style="display:none;text-align:center;color:var(--gn);font-size:12px;font-weight:700;margin-top:6px">&#x2713; Copied to clipboard!</div></div><button onclick="runGenerateProposalBID()" id="btn-gen-bid" style="width:100%;padding:13px;border:none;border-radius:var(--rs);background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;letter-spacing:.5px;box-sizing:border-box">&#x26A1; BUILD BID OBJECT</button></div></div>';
+  div.innerHTML='<div class="mo" id="proposalMo"><div class="modal" style="width:520px;max-width:95vw"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:20px;font-weight:800;color:var(--navy)">&#x1F4E4; Generate Proposal</div><span onclick="closeProposalModal()" style="cursor:pointer;font-size:20px;color:var(--tx3)">&#x2715;</span></div><div id="prop-preview" style="background:var(--bg);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.7;color:var(--tx)"></div><div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:8px">Proposal Valid For</div><div style="display:flex;gap:8px"><button class="prop-exp-btn" data-days="20" onclick="setPropExpiry(20)" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:var(--rs);background:#fff;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer">20 Days</button><button class="prop-exp-btn" data-days="25" onclick="setPropExpiry(25)" style="flex:1;padding:8px;border:1.5px solid var(--bl);border-radius:var(--rs);background:rgba(43,171,226,.08);color:var(--bl);font-weight:700;font-size:12px;cursor:pointer">25 Days &#x2713;</button><button class="prop-exp-btn" data-days="30" onclick="setPropExpiry(30)" style="flex:1;padding:8px;border:1.5px solid var(--bd);border-radius:var(--rs);background:#fff;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer">30 Days</button></div><div id="prop-expiry-display" style="font-size:11px;color:var(--tx3);margin-top:6px;text-align:center"></div></div><div id="prop-bill-warn" style="display:none;background:#FEF3C7;border:1px solid #F59E0B;border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E">&#x26A0;&#xFE0F; <b>No utility bill data.</b> Upload a bill or CSV in the &#x26A1; Utility Data section for accurate savings numbers. You can still generate &mdash; the proposal will use placeholder values.</div><div id="prop-output-wrap" style="display:none"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--tx3);letter-spacing:.5px;margin-bottom:6px">BID Object &mdash; Copy into proposal HTML</div><textarea id="prop-output" readonly style="width:100%;height:180px;font-family:monospace;font-size:10px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--rs);padding:10px;resize:none;line-height:1.5;box-sizing:border-box"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button onclick="copyBIDOutput()" style="flex:1;padding:9px;border:none;border-radius:var(--rs);background:var(--gn);color:#fff;font-weight:700;font-size:12px;cursor:pointer">&#x1F4CB; Copy BID Block</button><button onclick="downloadBIDOutput()" style="flex:1;padding:9px;border:1px solid var(--bd);border-radius:var(--rs);background:#fff;color:var(--navy);font-weight:700;font-size:12px;cursor:pointer">&#x2B07; Download .js</button></div><div id="prop-copy-confirm" style="display:none;text-align:center;color:var(--gn);font-size:12px;font-weight:700;margin-top:6px">&#x2713; Copied to clipboard!</div></div><button onclick="sendProposal()" id="btn-send-proposal" style="width:100%;padding:11px;border:none;border-radius:var(--rs);background:linear-gradient(135deg,#2BBCD4,#0e7a6e);color:#fff;font-weight:700;font-size:13px;cursor:pointer;margin-top:8px;letter-spacing:.5px;box-sizing:border-box">&#x1F680; Send Proposal to Customer</button><div id="prop-send-status" style="display:none;text-align:center;font-size:12px;font-weight:700;margin-top:6px"></div><button onclick="runGenerateProposalBID()" id="btn-gen-bid" style="width:100%;padding:13px;border:none;border-radius:var(--rs);background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;letter-spacing:.5px;box-sizing:border-box">&#x26A1; BUILD BID OBJECT</button></div></div>';
   document.body.appendChild(div.firstChild);
   document.getElementById('proposalMo').addEventListener('click',function(e){if(e.target===this)closeProposalModal();});
 }
@@ -3903,10 +3903,154 @@ function runGenerateProposalBID(){
   if(btn){btn.textContent='\u23F3 Building...';btn.disabled=true;}
   try{
     var bid=generateProposalBID();
+    // Store structured BID object for sendProposal
+    try{ window._lastBID=buildBIDObject(); }catch(e){ window._lastBID=null; }
     var output=_id('prop-output');if(output)output.value=bid;
     var wrap=_id('prop-output-wrap');if(wrap)wrap.style.display='block';
   }catch(e){alert('Error building BID: '+e.message);}
   finally{if(btn){btn.textContent='\u26A1 BUILD BID OBJECT';btn.disabled=false;}}
+}
+
+
+function buildBIDObject(){
+  // solar_pro_2435_v3_25 — complete BID capture
+  function elVal(id){var el=document.getElementById(id);return el?(el.value||''):'';}
+  function pf(v){return parseFloat(v)||0;}
+  function pi(v){return parseInt(v)||0;}
+
+  var custName=elVal('ca-cust').trim();
+  var custAddr=elVal('ca-addr').trim();
+  var repMap={'Admin':'Josh Pellzer','Josh':'Josh Pellzer','admin':'Josh Pellzer'};
+  var rawUser=(typeof currentUser!=='undefined'&&currentUser&&currentUser.u)?currentUser.u:'';
+  var repName=repMap[rawUser]||rawUser||'Josh Pellzer';
+
+  var rawDate=elVal('ca-date');var custDate='';
+  if(rawDate){var dp=rawDate.split('-');if(dp.length===3){var mo=['January','February','March','April','May','June','July','August','September','October','November','December'];custDate=mo[parseInt(dp[1])-1]+' '+parseInt(dp[2])+', '+dp[0];}}
+  if(!custDate){var n=new Date();var mo2=['January','February','March','April','May','June','July','August','September','October','November','December'];custDate=mo2[n.getMonth()]+' '+n.getDate()+', '+n.getFullYear();}
+
+  var expDate=new Date();expDate.setDate(expDate.getDate()+(typeof _propExpiryDays!=='undefined'?_propExpiryDays:25));
+  var expISO=expDate.getFullYear()+'-'+String(expDate.getMonth()+1).padStart(2,'0')+'-'+String(expDate.getDate()).padStart(2,'0')+'T23:59:00';
+
+  var auroraId=elVal('ca-aurora-id').trim();
+  var pdId=elVal('ca-pd-id').trim();
+
+  var panelQty=pi(elVal('cq-panels'));
+  var panelSel=document.getElementById('cs-panels');var panelId=panelSel?pi(panelSel.value):0;
+  var panItem=null;if(typeof D!=='undefined'){for(var i=0;i<D.panels.length;i++){if(D.panels[i].id===panelId){panItem=D.panels[i];break;}}}
+  var panelW=panItem?panItem.w:0;
+  var kwDC=Math.round(panelQty*panelW/1000*100)/100;
+  var kwAC=Math.round(kwDC*0.97*100)/100;
+
+  var salePrice=pf(elVal('ca-si'));
+  var fedPct=(typeof D!=='undefined'&&D.cfg)?(D.cfg.fed||0):0.30;
+  var credit=Math.round(salePrice*fedPct);
+  var netPrice=salePrice-credit;
+
+  var billAvg=pf(elVal('ca-bill-avg'));
+  var billKwh=pf(elVal('ca-bill-annual-kwh'));
+  var billRate=pf(elVal('ca-bill-rate'));
+  var monthlyKwh=[0,0,0,0,0,0,0,0,0,0,0,0];
+  var monthlyJson=elVal('ca-bill-monthly-json');
+  if(monthlyJson){try{var parsed=JSON.parse(monthlyJson);if(Array.isArray(parsed)&&parsed.length===12)monthlyKwh=parsed.map(function(v){return Math.round(pf(v));});}catch(e){}}
+  if(!monthlyJson&&billKwh>0){var seas=[0.82,0.78,0.85,0.90,1.00,1.12,1.20,1.18,1.10,0.95,0.83,0.77];var sSum=seas.reduce(function(a,b){return a+b;},0);monthlyKwh=seas.map(function(s){return Math.round(billKwh*s/sSum);});}
+
+  var annualKwh=Math.round(kwDC*1400);
+  var offsetPct=billKwh>0?Math.round(annualKwh/billKwh*100):0;
+
+  // Inverter model
+  var sysTypeRaw=elVal('ca-sys');
+  var invModel='';var invPart='';
+  if(typeof D!=='undefined'){
+    if(sysTypeRaw==='solaronly'){
+      var sinvEl=document.getElementById('cs-sinv');var sinvId=sinvEl?pi(sinvEl.value):0;var sinvItem=null;
+      for(var j=0;j<D.string_inv.length;j++){if(D.string_inv[j].id===sinvId){sinvItem=D.string_inv[j];break;}}
+      invModel=sinvItem?(sinvItem.model||sinvItem.d||''):'';invPart=sinvItem?(sinvItem.model||''):'';
+    }else if(sysTypeRaw==='tesla'||sysTypeRaw==='battonly'){
+      // Tesla system uses MCI Optimizer
+      var optEl=document.getElementById('cs-optimizer');var optId=optEl?pi(optEl.value):0;var optItem=null;
+      for(var j=0;j<D.optimizers.length;j++){if(D.optimizers[j].id===optId){optItem=D.optimizers[j];break;}}
+      if(!optItem&&typeof findOptimizer==='function'){optItem=findOptimizer(pi(elVal('cq-panels')));}
+      invModel=optItem?(optItem.d||'MCI Optimizer'):'MCI Optimizer';
+      invPart=optItem?('MCI-'+optItem.p+'P'):'';
+    }else{
+      var miEl=document.getElementById('cs-inverters');var miId=miEl?pi(miEl.value):0;var miItem=null;
+      for(var j=0;j<D.inverters.length;j++){if(D.inverters[j].id===miId){miItem=D.inverters[j];break;}}
+      invModel=miItem?(miItem.model||miItem.d||''):'';invPart=miItem?(miItem.model||''):'';
+    }
+  }
+
+  // Racking model
+  var rackModel='';var rackPart='';
+  if(typeof D!=='undefined'){
+    var rkEl=document.getElementById('cs-racking');var rkId=rkEl?pi(rkEl.value):0;var rkItem=null;
+    for(var j=0;j<D.racking.length;j++){if(D.racking[j].id===rkId){rkItem=D.racking[j];break;}}
+    rackModel=rkItem?(rkItem.model||rkItem.d||''):'';rackPart=rkItem?(rkItem.model||''):'';
+  }
+
+  // Battery model + qty — use package selection logic, not raw input field
+  var battModel='';var battPart='';var battQty=0;var battKwh=0;
+  if(typeof D!=='undefined'){
+    if(sysTypeRaw==='tesla'||sysTypeRaw==='battonly'){
+      var tpkgEl=document.getElementById('cs-tpkg');var tpkgId=tpkgEl?pi(tpkgEl.value):0;var tpkg=null;
+      for(var j=0;j<D.tesla_pkgs.length;j++){if(D.tesla_pkgs[j].id===tpkgId){tpkg=D.tesla_pkgs[j];break;}}
+      if(tpkg){battQty=tpkg.batt||0;battKwh=tpkg.kwh?Math.round(tpkg.kwh/(battQty||1)*10)/10:13.5;battModel=tpkg.exp>0?'Tesla Powerwall 3 + Expansion':'Tesla Powerwall 3';battPart=D.comp&&D.comp.tesla_pw3?D.comp.tesla_pw3.model:'1707000-XX-Y';}
+    }else if(sysTypeRaw==='enphase'){
+      var e5pEl=document.getElementById('cs-e5ppkg');var e5pId=e5pEl?pi(e5pEl.value):0;var e5pItem=null;
+      for(var j=0;j<D.enphase_5p_pkgs.length;j++){if(D.enphase_5p_pkgs[j].id===e5pId){e5pItem=D.enphase_5p_pkgs[j];break;}}
+      if(e5pItem){battQty=e5pItem.batt||0;battKwh=5;battModel='Enphase IQ Battery 5P';battPart=D.comp&&D.comp.enph_bat5p?D.comp.enph_bat5p.model:'IQBATTERY-5P-1P-NA-DOM-NFC';}
+    }else if(sysTypeRaw==='franklin'){
+      var fwhEl=document.getElementById('cs-fwhpkg');var fwhVal=fwhEl?fwhEl.value:'';var fwhItem=null;
+      if(fwhVal){var fp=fwhVal.split('-');var fa=(fp[0]==='aps')?D.franklin_aps_pkgs:D.franklin_ap2_pkgs;var fi=pi(fp[1]);for(var j=0;j<fa.length;j++){if(fa[j].id===fi){fwhItem=fa[j];break;}}}
+      if(fwhItem){battQty=fwhItem.batt||0;battKwh=15;battModel=fwhVal.startsWith('aps')?'Franklin aPower S':'Franklin aPower 2';battPart=battModel==='Franklin aPower S'?'APRS-10K15V1-US':'APR-10K15V2-US';}
+    }
+  }
+
+  // Monthly loan payment
+  var monthlyLoan=0;var monthlySac=0;
+  if(typeof D!=='undefined'){
+    var finSelEl=document.getElementById('cs-fin');
+    if(finSelEl&&pi(finSelEl.value)){
+      var finId=pi(finSelEl.value);var finItem=null;
+      for(var j=0;j<D.financing.length;j++){if(D.financing[j].id===finId){finItem=D.financing[j];break;}}
+      if(finItem&&finItem.f1>0)monthlyLoan=Math.round(salePrice*(1+(finItem.c||0))*finItem.f1);
+    }
+    var sacSelEl=document.getElementById('cs-sac');
+    if(sacSelEl&&pi(sacSelEl.value)){
+      var sacId=pi(sacSelEl.value);var sacItem=null;
+      for(var j=0;j<D.samecash.length;j++){if(D.samecash[j].id===sacId){sacItem=D.samecash[j];break;}}
+      if(sacItem&&sacItem.f1>0)monthlySac=Math.round(salePrice*(1+(sacItem.c||0))*sacItem.f1);
+    }
+  }
+
+  var leaseMonthly=pf(elVal('ca-lease-monthly').replace(/[^0-9.]/g,''));
+
+  // kw_dc saved in WATTS so proposal fmtK() (÷1000) displays correctly
+  var kwDC_watts=Math.round(kwDC*1000);
+  var kwAC_watts=Math.round(kwAC*1000);
+
+  return {
+    customer: {name:custName, address:custAddr, rep:repName, date:custDate, expiry:expISO},
+    aurora_project_id: auroraId,
+    pd_deal_id: pdId,
+    system: {
+      kw_dc:kwDC_watts, kw_ac:kwAC_watts, panels:panelQty,
+      annual_kwh:annualKwh, offset_pct:offsetPct,
+      panel_model:panItem?(panItem.model||panItem.d||''):'',
+      panel_part:panItem?(panItem.model||''):'',
+      inv_model:invModel, inv_part:invPart,
+      rack_model:rackModel, rack_part:rackPart,
+      batt_model:battModel, batt_part:battPart,
+      batt_qty:battQty, batt_kwh:battKwh
+    },
+    pricing: {
+      total:Math.round(salePrice), credit:credit, net:Math.round(netPrice),
+      monthly_loan:monthlyLoan, monthly_sac:monthlySac,
+      lease_monthly:Math.round(leaseMonthly)
+    },
+    bill: {avg:billAvg, kwh:Math.round(billKwh), rate:billRate},
+    monthly_kwh: monthlyKwh,
+    esc: 6
+  };
 }
 
 function generateProposalBID(){
@@ -4091,6 +4235,49 @@ function downloadBIDOutput(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('Downloaded — '+filename);
+}
+
+function sendProposal(){
+  var output=_id('prop-output');
+  if(!output||!output.value){toast('Build the BID first');return;}
+  var statusEl=_id('prop-send-status');
+  var btn=_id('btn-send-proposal');
+  // Parse the BID from the textarea
+  var bidText=output.value;
+  var bidMatch=bidText.match(/const BID\s*=\s*(\{[\s\S]*?\});?\s*$/m);
+  // Use stored _lastBID if available (set by runGenerateProposalBID)
+  var bid=window._lastBID||null;
+  if(!bid){toast('Build the BID first');return;}
+  var pdId=(_id('ca-pd-id')||{}).value||'';
+  if(btn){btn.disabled=true;btn.textContent='Sending...';}
+  if(statusEl){statusEl.style.display='block';statusEl.style.color='#854d0e';statusEl.textContent='Saving proposal...';}
+  fetch('https://pell-solar-contract-api.onrender.com/save-proposal',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({bid:bid, pd_deal_id:pdId})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.url){
+      if(statusEl){statusEl.style.color='#166534';statusEl.textContent='✓ Proposal saved! Copying link...';}
+      // Copy URL to clipboard
+      navigator.clipboard.writeText(data.url).catch(function(){});
+      // Store for display
+      window._lastProposalUrl=data.url;
+      if(btn){btn.disabled=false;btn.textContent='✓ Link Copied — Send Again';}
+      if(statusEl){
+        statusEl.innerHTML='✓ <a href="'+data.url+'" target="_blank" style="color:#166534">'+data.url+'</a> — copied to clipboard!';
+      }
+      toast('✓ Proposal link copied!');
+    } else {
+      throw new Error(data.error||'Save failed');
+    }
+  })
+  .catch(function(err){
+    if(statusEl){statusEl.style.color='#991b1b';statusEl.textContent='✗ Error: '+err.message;}
+    if(btn){btn.disabled=false;btn.textContent='🚀 Send Proposal to Customer';}
+    toast('Error: '+err.message);
+  });
 }
 
 // ===== LOGO INIT =====
