@@ -1,4 +1,4 @@
-<!-- Solar Pro v3.22 — 2026-03-11 — Generate Proposal: BID object modal + generateProposalBID() -->
+<!-- Solar Pro v3.23 — 2026-03-11 — Generate Proposal: BID object modal + generateProposalBID() -->
 <style>
 
 :root{--bg:#ebeef5;--bg2:#e0e4ef;--white:#ffffff;--card:#ffffff;--navy:#1a1a2e;--navy2:#1e2a4a;--gold:#FED44D;--goldd:#e6bf3a;--goldbg:rgba(254,212,77,.12);--gn:#22C55E;--gnbg:rgba(34,197,94,.08);--rd:#dc2626;--rdbg:rgba(220,38,38,.08);--bl:#2BABE2;--blbg:rgba(43,171,226,.08);--pu:#7c3aed;--pubg:rgba(124,58,237,.07);--bd:#cdd2e0;--bd2:#b8bdd0;--tx:#0a0a1a;--tx2:#1a1e35;--tx3:#3a4060;--r:12px;--rs:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05)}
