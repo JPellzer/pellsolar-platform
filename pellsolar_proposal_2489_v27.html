@@ -938,6 +938,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Hide page until BID loads to prevent flash of wrong data
     document.body.style.opacity = '0';
     document.body.style.transition = 'opacity 0.3s ease';
+    // Safety net — never stay invisible more than 5 seconds (handles Render cold start)
+    var _showTimeout = setTimeout(function() {
+      document.body.style.opacity = '1';
+      hydrate();
+      setTimeout(function() { pcUpdateAll(); renderMonthly(); renderDaily(); setupHover(); }, 120);
+      initSectionToggles();
+    }, 5000);
     // Fetch BID from Render API using proposal token
     fetch('https://pell-solar-contract-api.onrender.com/get-proposal?pid=' + encodeURIComponent(_pid))
       .then(function(r) {
@@ -981,6 +988,7 @@ document.addEventListener('DOMContentLoaded', function() {
         PC.cash  = BID.pricing.net || PC.cash;
         PC.fin   = BID.pricing.monthly_loan || PC.fin;
         if (b.pricing && b.pricing.monthly_sac) PC.lease = b.pricing.monthly_sac;
+        clearTimeout(_showTimeout);
         hydrate();
         // Reset countUp flags so KPI tiles re-animate with correct API values
         document.querySelectorAll('[data-count]').forEach(function(el){delete el.dataset.done;});
@@ -990,6 +998,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.style.opacity = '1';
       })
       .catch(function() {
+        clearTimeout(_showTimeout);
         // Network error — fall back to hardcoded BID
         document.body.style.opacity = '1';
         hydrate();
